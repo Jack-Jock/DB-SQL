@@ -1,0 +1,185 @@
+Скорий Євген 241
+ЛР №6 
+Проектування багатотабличних запитів (внутрішнє з'єднання, inner join, left join, right join, self join, subquery, correlated subquery, exists, not exist, union)
+
+1.	Вивести значення наступних колонок: назва книги, ціна, назва видавництва. Використовувати внутрішнє з'єднання, застосовуючи where.
+SELECT book.Name, 
+	book.Price, 
+	producer.Producer_Name 
+	FROM book, producer 
+	WHERE book.ProducerID = producer.ID_Producer;
+
+2.	Вивести значення наступних колонок: назва книги, назва категорії. Використовувати внутрішнє з'єднання, застосовуючи inner join.
+SELECT book.Name, 
+	category.Category_Name 
+	FROM book 
+	INNER JOIN category ON book.CategoryID = category.ID_Category;
+
+3.	Вивести значення наступних колонок: назва книги, ціна, назва видавництва, формат.
+SELECT book.Name, 
+	book.Price, 
+	producer.Producer_Name, 
+	format.Format_Name 
+	FROM book 
+	JOIN producer ON book.ProducerID = producer.ID_Producer 
+	JOIN format ON book.FormatID = format.ID_Format;
+
+4.	Вивести значення наступних колонок: тема, категорія, назва книги, назва видавництва. Фільтр по темам і категоріям.
+SELECT book.Name, 
+	topic.Topic_Name, 
+	category.Category_Name, 
+	producer.Producer_Name 
+	FROM book 
+	JOIN topic ON book.TopicID = topic.ID_Topic 
+	JOIN category ON book.CategoryID = category.ID_Category 
+	JOIN producer ON book.ProducerID = producer.ID_Producer 
+	ORDER BY topic.ID_Topic ASC, category.Category_Name ASC;
+
+5.	Вивести книги видавництва 'BHV', видані після 2000 р
+SELECT * 
+	FROM book 
+	WHERE ProducerID = 1 AND YEAR(Date) > 2000;
+
+6.	Вивести загальну кількість сторінок по кожній назві категорії. Фільтр по спадаючій кількості сторінок.
+SELECT category.Category_Name, 
+	SUM(Pages) AS SUM_Pages 
+	FROM book 
+	JOIN category ON book.CategoryID = category.ID_Category 
+	GROUP BY category.Category_Name 
+	ORDER BY SUM_Pages DESC;
+
+7.	Вивести середню вартість книг по темі 'Використання ПК' і категорії 'Linux'.
+SELECT AVG(Price) AS AVG_Price, 
+	topic.Topic_Name, 
+	category.Category_Name 
+	FROM book, 
+	topic, 
+	category 
+	WHERE topic.ID_Topic = 1 AND category.ID_Category = 6;
+
+8.	Вивести всі дані універсального відношення. Використовувати внутрішнє з'єднання, застосовуючи where.
+SELECT book.Number, 
+	book.CodeID, 
+	book.New, 
+	book.Name, 
+	book.Price, 
+	book.Pages, 
+	book.Date, 
+	format.Format_Name, 
+	producer.Producer_Name, 
+	category.Category_Name, 
+	topic.Topic_Name 
+	FROM book, 
+	format, 
+	producer, 
+	category, 
+	topic 
+	WHERE book.FormatID = format.ID_Format 
+	AND book.ProducerID = producer.ID_Producer 
+	AND book.CategoryID = category.ID_Category 
+	AND book.TopicID = topic.ID_Topic;
+
+9.	Вивести всі дані універсального відношення. Використовувати внутрішнє з'єднання, застосовуючи inner join.
+SELECT book.Number, 
+	book.CodeID, book.New, 
+	book.Name, book.Price, 
+	book.Pages, book.Date, 
+	format.Format_Name, producer.Producer_Name, 
+	category.Category_Name, topic.Topic_Name 
+	FROM book 
+	INNER JOIN format ON book.FormatID = format.ID_Format 
+	INNER JOIN producer ON book.ProducerID = producer.ID_Producer 
+	INNER JOIN category ON book.CategoryID = category.ID_Category 
+	INNER JOIN topic ON book.TopicID = topic.ID_Topic;
+
+10.	Вивести всі дані універсального відношення. Використовувати зовнішнє з'єднання, застосовуючи left join / rigth join.
+SELECT book.Number, book.CodeID, 
+	book.New, book.Name, 
+	book.Price, book.Pages, 
+	book.Date, format.Format_Name, 
+	producer.Producer_Name, category.Category_Name, topic.Topic_Name 
+	FROM book 
+	LEFT JOIN format ON book.FormatID = format.ID_Format 
+	LEFT JOIN producer ON book.ProducerID = producer.ID_Producer 
+	LEFT JOIN category ON book.CategoryID = category.ID_Category 
+	LEFT JOIN topic ON book.TopicID = topic.ID_Topic;
+
+SELECT book.Number, book.CodeID, 
+	book.New, book.Name, 
+	book.Price, book.Pages, 
+	book.Date, format.Format_Name, 
+	producer.Producer_Name, category.Category_Name, 
+	topic.Topic_Name 
+	FROM book 
+	RIGHT JOIN format ON book.FormatID = format.ID_Format 
+	RIGHT JOIN producer ON book.ProducerID = producer.ID_Producer 
+	RIGHT JOIN category ON book.CategoryID = category.ID_Category 
+	RIGHT JOIN topic ON book.TopicID = topic.ID_Topic;
+
+11.	Вивести пари книг, що мають однакову кількість сторінок. Використовувати само об’єднання і аліаси (self join).
+SELECT book1.Name AS book1_Name, 
+	book2.Name AS book2_Name, 
+	book1.Pages AS Pages 
+	FROM book book1 
+	JOIN book book2 ON book1.Pages = book2.Pages 
+	AND book1.Number <> book2.Number;
+
+12.	Вивести тріади книг, що мають однакову ціну. Використовувати самооб'єднання і аліаси (self join).
+SELECT book1.Name AS book1_Name, 
+	book2.Name AS book2_Name, 
+	book3.Name AS book3_Name, 
+	book1.Price AS Price 
+	FROM book book1 
+	JOIN book book2 ON book1.Price = book2.Price 
+	JOIN book book3 ON book1.Price = book3.Price 
+	WHERE book1.Number < book2.Number AND book2.Number < book3.Number;
+
+13.	Вивести всі книги категорії 'C ++'. Використовувати підзапити (subquery).
+SELECT * 
+	FROM book, category 
+	WHERE category.Category_Name = 'C&C++' AND book.CategoryID = category.ID_Category;
+
+14.	Вивести книги видавництва 'BHV', видані після 2000 р Використовувати підзапити (subquery).
+SELECT * 
+	FROM book, producer 
+	WHERE producer.Producer_Name = 'BHV' AND YEAR(Date) > 2000;
+
+15.	Вивести список видавництв, у яких розмір книг перевищує 400 сторінок. Використовувати пов'язані підзапити (correlated subquery).
+SELECT * 
+	FROM producer 
+	WHERE ( 
+		SELECT MAX(Pages) 
+		FROM book 
+		WHERE book.ProducerID = producer.ID_Producer) >= 400;
+
+16.	Вивести список категорій в яких більше 3-х книг. Використовувати пов'язані підзапити (correlated subquery).
+SELECT * 
+	FROM category 
+	WHERE(
+		SELECT COUNT(*) 
+		FROM book 
+		WHERE book.CategoryID = category.ID_Category) > 3;
+
+17.	Вивести список книг видавництва 'BHV', якщо в списку є хоча б одна книга цього видавництва. Використовувати exists.
+SELECT * 
+	FROM book 
+	WHERE EXISTS (
+		SELECT * 
+		FROM producer 
+		WHERE producer.Producer_Name = 'BHV' AND book.ProducerID = producer.ID_Producer);
+
+18.	Вивести список книг видавництва 'BHV', якщо в списку немає жодної книги цього видавництва. Використовувати not exists.
+SELECT * 
+	FROM book 
+	WHERE NOT EXISTS (
+		SELECT * FROM producer 
+		WHERE producer.Producer_Name = 'BHV' AND book.ProducerID = producer.ID_Producer);
+
+19.	Вивести відсортований загальний список назв тем і категорій. Використовувати union.
+SELECT * FROM category UNION SELECT * FROM topic ORDER BY Category_Name;
+
+20.	Вивести відсортований в зворотному порядку загальний список перших слів, назв книг і категорій що не повторюються. Використовувати union.
+SELECT Word 
+	FROM ( SELECT LEFT(Name, LOCATE(' ', Name) - 1) AS Word 
+		FROM book UNION SELECT category.Category_Name FROM category ) AS combined 
+		GROUP BY Word ORDER BY Word DESC;

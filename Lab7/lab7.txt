@@ -1,0 +1,181 @@
+Скорий Євген
+ЛР №7
+Проектування і перевірка збережених процедур (stored procedure): без параметрів, з вхідними параметрами, з вхідними параметрами за замовчуванням, з вихідними параметрами
+
+1.	Вивести значення наступних колонок: назва книги, ціна, назва видавництва, формат.
+DELIMITER //
+CREATE PROCEDURE BookDate_T1()
+BEGIN
+    SELECT book.Name, book.Price, producer.Producer_Name, format.Format_Name
+    FROM book
+    JOIN producer ON book.ProducerID = producer.ID_Producer
+    JOIN format ON book.FormatID = format.ID_Format;
+END // 
+DELIMITER ;
+
+2.	Вивести значення наступних колонок: тема, категорія, назва книги, назва видавництва. Фільтр по темам і категоріям.
+DELIMITER //
+CREATE PROCEDURE BookDate_T2(IN topic_name VARCHAR(255), IN category_name VARCHAR(255))
+BEGIN
+    SELECT topic.Topic_Name, category.Category_Name, book.Name, producer.Producer_Name
+    FROM book
+    JOIN topic ON book.TopicID = topic.ID_Topic
+    JOIN category ON book.CategoryID = category.ID_Category
+    JOIN producer ON book.ProducerID = producer.ID_Producer
+    WHERE topic.Topic_Name = topic_name AND category.Category_Name = category_name;
+END
+DELIMITER ;
+
+3.	Вивести книги видавництва 'BHV', видані після 2000 р
+DELIMITER //
+CREATE PROCEDURE BookProdYear_T3()
+BEGIN
+  SELECT * FROM book, producer
+  WHERE producer.Producer_Name = 'BHV' AND YEAR(Date) > 2000;
+END //
+DELIMITER ;
+
+4.	Вивести загальну кількість сторінок по кожній назві категорії. Фільтр по спадаючій / зростанню кількості сторінок.
+DELIMITER //
+CREATE PROCEDURE BookProdYear_T4DESC()
+BEGIN
+  SELECT category.Category_Name, SUM(Pages) AS SUM_Pages 
+  FROM book 
+  JOIN category ON book.CategoryID = category.ID_Category 
+  GROUP BY category.Category_Name 
+  ORDER BY SUM_Pages DESC;
+END //
+DELIMITER ;
+DELIMITER //
+CREATE PROCEDURE BookProdYear_T4ASC()
+BEGIN
+  SELECT category.Category_Name, SUM(Pages) AS SUM_Pages 
+  FROM book 
+  JOIN category ON book.CategoryID = category.ID_Category 
+  GROUP BY category.Category_Name 
+  ORDER BY SUM_Pages ASC;
+END //
+DELIMITER ;
+
+5.	Вивести середню вартість книг по темі 'Використання ПК' і категорії 'Linux'.
+DELIMITER //
+CREATE PROCEDURE BookDate_T5()
+BEGIN
+  SELECT AVG(book.Price), category.Category_Name, topic.Topic_Name
+    FROM book
+    JOIN category ON book.CategoryID = category.ID_Category
+    JOIN topic ON book.TopicID = topic.ID_Topic
+    WHERE topic.ID_Topic = 1 AND category.ID_Category = 6;
+END //
+DELIMITER ;
+
+6.	Вивести всі дані універсального відношення.
+DELIMITER //
+CREATE PROCEDURE BookDate_T6()
+BEGIN
+  SELECT book.Number, book.CodeID, book.New, book.Name, book.Price, book.Pages, book.Date, 
+  format.Format_Name, producer.Producer_Name, category.Category_Name, topic.Topic_Name 
+  FROM book, format, producer, category, topic 
+  WHERE book.FormatID = format.ID_Format AND book.ProducerID = producer.ID_Producer 
+  AND book.CategoryID = category.ID_Category AND book.TopicID = topic.ID_Topic;
+END //
+DELIMITER ;
+
+
+7.	Вивести пари книг, що мають однакову кількість сторінок.
+DELIMITER //
+CREATE PROCEDURE BookDate_T7()
+BEGIN
+  SELECT book1.Name AS book1_Name, book2.Name AS book2_Name, book1.Pages AS Pages 
+  FROM book book1 JOIN book book2 ON book1.Pages = book2.Pages 
+  AND book1.Number <> book2.Number;
+END //
+DELIMITER ;
+
+8.	Вивести тріади книг, що мають однакову ціну.
+DELIMITER //
+CREATE PROCEDURE BookDate_T7()
+BEGIN
+  SELECT book1.Name AS book1_Name, book2.Name AS book2_Name, book3.Name AS book3_Name, book1.Price AS Price 
+  FROM book book1 JOIN book book2 ON book1.Price = book2.Price 
+  JOIN book book3 ON book1.Price = book3.Price 
+  WHERE book1.Number < book2.Number AND book2.Number < book3.Number;
+END //
+DELIMITER ;
+
+9.	Вивести всі книги категорії 'C ++'.
+DELIMITER //
+CREATE PROCEDURE BookDate_T9()
+BEGIN
+  SELECT * FROM book, category 
+  WHERE category.Category_Name = 'C&C++' AND book.CategoryID = category.ID_Category;
+END //
+DELIMITER ;
+
+10.	Вивести список видавництв, у яких розмір книг перевищує 400 сторінок.
+DELIMITER //
+CREATE PROCEDURE BookDate_T10()
+BEGIN
+  SELECT * FROM producer
+  WHERE ( SELECT MAX(Pages) 
+         FROM book 
+         WHERE book.ProducerID = producer.ID_Producer) >= 400;
+END //
+DELIMITER ;
+
+11.	Вивести список категорій за якими більше 3-х книг.
+DELIMITER //
+CREATE PROCEDURE BookDate_T10()
+BEGIN
+  SELECT * FROM category 
+  WHERE(SELECT COUNT(*) 
+        FROM book 
+        WHERE book.CategoryID = category.ID_Category) > 3;
+END //
+DELIMITER ;
+
+12.	Вивести список книг видавництва 'BHV', якщо в списку є хоча б одна книга цього видавництва.
+DELIMITER //
+CREATE PROCEDURE BookDate_T11()
+BEGIN
+  SELECT * FROM book 
+  WHERE EXISTS (SELECT * 
+                FROM producer 
+                WHERE producer.Producer_Name = 'BHV' 
+                AND book.ProducerID = producer.ID_Producer);
+END //
+DELIMITER ;
+
+13.	Вивести список книг видавництва 'BHV', якщо в списку немає жодної книги цього видавництва.
+DELIMITER //
+CREATE PROCEDURE BookDate_T12()
+BEGIN
+  SELECT * FROM book 
+  WHERE NOT EXISTS (SELECT * 
+                    FROM producer 
+                    WHERE producer.Producer_Name = 'BHV' AND book.ProducerID = producer.ID_Producer);
+END //
+DELIMITER ;
+
+14.	Вивести відсортоване загальний список назв тем і категорій.
+DELIMITER //
+CREATE PROCEDURE BookDate_T13()
+BEGIN
+  SELECT * FROM category 
+  UNION SELECT * FROM topic 
+  ORDER BY Category_Name;
+END //
+DELIMITER ;
+
+15.	Вивести відсортований в зворотному порядку загальний список перших слів назв книг і категорій що не повторюються
+DELIMITER //
+CREATE PROCEDURE BookDate_T15()
+BEGIN
+  SELECT Word FROM ( SELECT LEFT(Name, LOCATE(' ', Name) - 1) AS Word 
+                    FROM book UNION SELECT category.Category_Name 
+                    FROM category ) AS combined 
+                    GROUP BY Word ORDER BY Word DESC;
+END //
+DELIMITER ;
+
+

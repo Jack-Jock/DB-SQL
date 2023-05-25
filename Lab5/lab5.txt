@@ -1,0 +1,112 @@
+Скорий Євген 241
+ЛР №5   
+Проектування БД, нормалізація, створення таблиць (головний ключ, обмеження, зовнішній ключ, зв'язку, довідкова цілісність) і завантаження даних
+
+Створення таблиць
+
+CREATE TABLE Category(
+    ID_Category INT PRIMARY KEY AUTO_INCREMENT,
+    Category_Name VARCHAR(100) NOT NULL
+);
+
+INSERT INTO Category(Category_Name) 
+VALUES ('Підручники'), 
+       ('Апаратні засоби'), 
+       ('Захист і безпека ПК'),
+       ('Інші книги'),  
+       ('Windows 2000'), 
+       ('Linux'), 
+       ('Unix'), 
+       ('Інші операційні системи'), 
+       ('C&C++'), 
+       ('SQL');
+
+CREATE TABLE Producer(
+    ID_Producer INT PRIMARY KEY AUTO_INCREMENT,
+    Producer_Name VARCHAR(100) NOT NULL
+);
+
+INSERT INTO Producer(Producer_Name) 
+VALUES ('BHV'), 
+        ('Вільямс'), 
+        ('МікроАрт'), 
+        ('DiaSoft'), 
+        ('ДМК'), 
+        ('Триумф'), 
+        ('Еком'),
+        ('Києво-Могилянська академія'),
+        ('Університет "Україна"'),
+        ('Вінниця: ВДТУ');
+
+CREATE TABLE Topic(
+    ID_Topic INT PRIMARY KEY AUTO_INCREMENT,
+    Topic_Name VARCHAR(100) NOT NULL
+);
+
+INSERT INTO Topic(Topic_Name)
+VALUES ('Використання ПК в цілому'), 
+       ('Операційні системи'), 
+       ('Програмування');
+       
+CREATE TABLE Format(
+    ID_Format INT PRIMARY KEY AUTO_INCREMENT,
+    Format_Name VARCHAR(50) NOT NULL
+);
+
+INSERT INTO Format(Format_Name)
+VALUES ('70х100/16'), 
+       ('84х108/16'), 
+       ('60х88/16'),
+       ('84х100/16'),
+       ('60х84/16'),
+       ('60х90/16');
+
+
+Створення основної таблиці
+
+CREATE TABLE book(
+   Number INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+   CodeID INT NOT NULL,
+   New varchar(5) NOT NULL,
+   Name VARCHAR(255) NOT NULL,
+   Price FLOAT DEFAULT NULL,
+   ProducerID INT NOT NULL,
+   Pages INT(11) NOT NULL CHECK (Pages > 0),
+   FormatID INT NOT NULL,
+   Date DATE DEFAULT NULL,
+   Circulation INT(11) NOT NULL CHECK (Circulation > 0),
+   TopicID INT NOT NULL,
+   CategoryID INT NOT NULL
+); 
+
+INSERT INTO book(CodeID, New, Name, Price, Pages, FormatID, Date, Circulation, ProducerID, TopicID, CategoryID) VALUES
+(5110, 'No', 'Апаратні засоби мультимедіа.Відеосистема PC', 15.51, 400, 1, '2000-07-24', 5000, 1, 1, 1),
+(4985, 'No', 'Засвой самостійно модернізацію та ремонт ПК за 24 години, 2-ге вид', 18.9, 288, 1, '2000-07-07', 5000, 2, 1, 1),
+(5141, 'No', 'Структури даних та алгоритми.', 37.80, 384, 1, '2000-09-29', 5000, 2, 1, 1),
+(5127, 'No', 'Автоматизація інженерно-графічних робіт', 11.58, 256, 1, '2000-06-15', 5000, 1, 1, 1),
+(5110, 'No', 'Апаратні засоби мультимедіа. Відеосистема РС', 15.51, 400, 1, '2000-07-24', 5000, 1, 1, 2),
+(5199, 'No', 'Залізо IBM 2001. ', 30.07, 368, 1, '2000-12-02', 5000, 3, 1, 2),
+(3851, 'No', 'Захист інформації та безпека компьютерних систем', 26.00, 480, 2, '1999-02-04', 5000, 4, 1, 3),
+(3932,'No', ' Як перетворити персональний компьютер на вимірювальний комплекс', 7.65, 144, 3, '1999-06-09', 5000, 5, 1, 4),
+(4713, 'No', 'Plug- ins. Додаткові програми для музичних програм', 11.41, 144, 1, '2000-02-22', 5000, 5, 1, 4),
+(5217, 'No', 'Windows МЕ. Найновіші версії програм', 16.57, 320, 1, '2000-08-25', 5000, 6, 2, 5),
+(4829, 'No', 'Windows 2000 Professional крок за кроком СD', 27.25, 320, 1, '2000-04-28', 5000, 7, 2, 5),
+(5170, 'No', 'Linux  версії', 24.43, 346, 1, '2000-09-29', 5000, 5, 2, 6),
+(860, 'No', 'Операційна система UNIX', 3.50, 395, 4, '1997-05-05' , 5000, 1, 2, 7),
+(44, 'No', 'Відповіді на актуальні запитання щодо OS/2 Warp', 5.00, 352, 5, '1996-03-20', 5000, 4, 2, 8),
+(5176, 'No', 'Windows Ме. Спутник користувач', 12.79, 306, '-', '2000-10-10', 5000, 1, 2, 8),
+(5462, 'No', 'Мова програмування С++. Лекції та вправи ', 29.00, 656, 2, '2000-12-12', 5000, 4, 3, 9),
+(4982, 'No', 'Мова програмування С. Лекції та вправи', 29.00, 432, 2, '2000-07-12', 5000, 4, 3, 9),
+(4687, 'No', 'Ефективне використання C++ .50 рекомендацій щодо покращення ваших програм та проектів', 17.60, 240, 1, '2000-02-03', 5000, 5, 3, 9),
+(235, 'No', 'Інформаційні системи і структури даних', null, 288, 6,'  ', 400, 8, 1, 4),
+(8746, 'Yes', 'Бази даних в інформаційних системах', null, 418, 5, '2018-07-25', 100, 9, 3, 10),
+(2154, 'Yes', 'Сервер на основі операційної системи FreeBSD 6.1', 0, 216, 5, '2015-11-03', 500, 9, 3, 8),
+(2662, 'No', 'Організація баз даних та знань', 0, 208, 6, '2001-10-10', 1000, 10, 3, 10),
+(5641, 'Yes', 'Організація баз даних та знань', 0, 384, 1, '2021-12-15', 5000, 1, 3, 10);
+
+Створення зовнішніх ключів
+
+ALTER TABLE book ADD FOREIGN KEY(ProducerID) REFERENCES Producer(ID_Producer) ON DELETE CASCADE;
+ALTER TABLE book ADD FOREIGN KEY(TopicID) REFERENCES Topic(ID_Topic) ON DELETE CASCADE;
+ALTER TABLE book ADD FOREIGN KEY(CategoryID) REFERENCES Category(ID_Category) ON DELETE CASCADE;
+ALTER TABLE book ADD FOREIGN KEY(FormatID) REFERENCES Format(ID_Format) ON DELETE CASCADE;

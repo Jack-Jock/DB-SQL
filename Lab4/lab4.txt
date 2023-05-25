@@ -1,0 +1,192 @@
+Скорий Євген 241
+ЛР №4  
+Проектування однотабличних запитів, що містять функції агрегування і групування
+
+1.	Вивести статистику: загальна кількість всіх книг, їх вартість, їх середню вартість, мінімальну і максимальну ціну
+SELECT COUNT(Name), 
+	SUM(Price), 
+	AVG(Price), 
+	MAX(Price), 
+	MIN(Price) 
+	FROM `book`;
+
+2.	Вивести загальну кількість всіх книг без урахування книг з непроставленою ціною
+SELECT COUNT(Name) 
+	FROM `book` 
+	WHERE Price IS NOT NULL;
+
+3.	Вивести статистику (див. 1) для книг новинка / не новинка
+SELECT COUNT(Name), 
+	SUM(Price), 
+	AVG(Price), 
+	MAX(Price), 
+	MIN(Price), 
+	New AS IsNew 
+	FROM `book` 
+	GROUP BY New;
+
+4.	Вивести статистику (див. 1) для книг за кожним роком видання
+SELECT COUNT(Name), 
+	SUM(Price), 
+	AVG(Price), 
+	MAX(Price), 
+	MIN(Price), 
+	Date AS IsDate 
+	FROM `book` 
+	GROUP BY Year(Date);
+
+5.	Змінити п.4, виключивши з статистики книги з ціною від 10 до 20
+SELECT COUNT(Name), 
+	SUM(Price), 
+	AVG(Price), 
+	MAX(Price), 
+	MIN(Price), 
+	Date AS IsDate 
+	FROM `book` 
+	WHERE Price BETWEEN 10 AND 20 
+	GROUP BY Year(Date);
+
+6.	Змінити п.4. Відсортувати статистику по спадаючій кількості.
+SELECT COUNT(Name), 
+	SUM(Price), 
+	AVG(Price), 
+	MAX(Price), 
+	MIN(Price), 
+	Date AS IsDate 
+	FROM `book` 
+	GROUP BY Year(Date) 
+	ORDER BY COUNT(Name) DESC;
+
+7.	Вивести загальну кількість кодів книг і кодів книг що не повторюються
+SELECT COUNT(CodeID) AS AllCodeID, 
+	COUNT(DISTINCT CodeID) AS DCodeID 
+	FROM `book`;
+
+8.	Вивести статистику: загальна кількість і вартість книг по першій букві її назви
+SELECT COUNT(Name), 
+	COUNT(Price), 
+	LEFT(Name,1) AS 1STLetter 
+	FROM `book` 
+	GROUP BY 1STLetter;
+
+9.	Змінити п. 8, виключивши з статистики назви що починаються з англ. букви або з цифри.
+SELECT COUNT(Name), 
+	COUNT(Price), 
+	LEFT(Name,1) AS 1STLetter 
+	FROM `book` 
+	WHERE Name NOT REGEXP '^[A-Za-z0-9]' 
+	GROUP BY 1STLetter;
+
+10.	Змінити п. 9 так щоб до складу статистики потрапили дані з роками більшими за 2000.
+SELECT COUNT(Name), 
+	COUNT(Price), 
+	LEFT(Name,1) AS 1STLetter 
+	FROM `book` 
+	WHERE Name NOT REGEXP '^[A-Za-z0-9]' AND Year(Date) >= 2000 
+	GROUP BY 1STLetter;
+
+11.	Змінити п. 10. Відсортувати статистику по спадаючій перших букв назви.
+SELECT COUNT(Name), 
+	COUNT(Price), 
+	LEFT(Name,1) AS 1STLetter 
+	FROM `book` 
+	WHERE Name NOT REGEXP '^[A-Za-z0-9]' AND Year(Date) >= 2000 
+	GROUP BY 1STLetter 
+	ORDER BY 1STLetter ASC;
+
+12.	Вивести статистику (див. 1) по кожному місяцю кожного року.
+SELECT COUNT(Name) AS COUNTBOOK, 
+	SUM(Price) AS SUMPRICE, 
+	AVG(Price) AS AVGPRICE, 
+	MAX(Price) AS MAXPRICE, 
+	MIN(Price) AS MINPRICE, 
+	MONTH(Date) AS MONTH_YEAR, 
+	YEAR(Date) AS YEAR_ 
+	FROM `book` 
+	GROUP BY MONTH_YEAR, YEAR_;
+
+13.	Змінити п. 12 так щоб до складу статистики не увійшли дані з незаповненими датами.
+SELECT COUNT(Name) AS COUNTBOOK, 
+	SUM(Price) AS SUMPRICE, 
+	AVG(Price) AS AVGPRICE, 
+	MAX(Price) AS MAXPRICE, 
+	MIN(Price) AS MINPRICE, 
+	MONTH(Date) AS MONTH_YEAR, 
+	YEAR(Date) AS YEAR_ 
+	FROM `book` 
+	WHERE Date is NOT NULL 
+	GROUP BY MONTH_YEAR, YEAR_;
+
+14.	Змінити п. 12. Фільтр по спадаючій року і зростанню місяця.
+SELECT COUNT(Name) AS COUNTBOOK, 
+	SUM(Price) AS SUMPRICE, 
+	AVG(Price) AS AVGPRICE, 
+	MAX(Price) AS MAXPRICE, 
+	MIN(Price) AS MINPRICE, 
+	MONTH(Date) AS MONTH_YEAR, 
+	YEAR(Date) AS YEAR_ 
+	FROM `book` 
+	WHERE Date is NOT NULL 
+	GROUP BY MONTH_YEAR, YEAR_ 
+	ORDER BY MONTH_YEAR DESC, YEAR_ ASC;
+
+15.	Вивести статистику для книг новинка / не новинка: загальна ціна, загальна ціна в грн. / Євро / руб. Колонкам запиту дати назви за змістом.
+SELECT COUNT(Name), 
+	SUM(Price * 36.56) AS SUM_UAH, 
+	SUM(Price * 1.06) AS SUM_EUR, 
+	SUM(Price * 80.54) AS SUM_RUB, 
+	New AS IsNew 
+	FROM `book` 
+	GROUP BY New;
+
+16.	Змінити п. 15 так щоб виводилася округлена до цілого числа (дол. / Грн. / Євро / руб.) Ціна.
+SELECT COUNT(Name), 
+	ROUND(SUM(Price * 36.56)) AS SUM_UAH, 
+	ROUND(SUM(Price * 1.06)) AS SUM_EUR, 
+	ROUND(SUM(Price * 80.54)) AS SUM_RUB, 
+	New AS IsNew 
+	FROM `book` 
+	GROUP BY New;
+
+17.	Вивести статистику (див. 1) по видавництвах.
+SELECT COUNT(Name) AS COUNTBOOK, 
+	SUM(Price) AS SUMPRICE, 
+	AVG(Price) AS AVGPRICE, 
+	MAX(Price) AS MAXPRICE, 
+	MIN(Price) AS MINPRICE, 
+	Producer 
+	FROM `book` 
+	GROUP BY Producer;
+
+18.	Вивести статистику (див. 1) за темами і видавництвами. Фільтр по видавництвам.
+SELECT COUNT(Name) AS COUNTBOOK, 
+	SUM(Price) AS SUMPRICE, 
+	AVG(Price) AS AVGPRICE, 
+	MAX(Price) AS MAXPRICE, 
+	MIN(Price) AS MINPRICE, 
+	Producer, 
+	Topic 
+	FROM `book` 
+	GROUP BY Producer, Topic 
+	ORDER BY Producer ASC;
+
+19.	Вивести статистику (див. 1) за категоріями, темами і видавництвами. Фільтр по видавництвам, темах, категоріям.
+SELECT COUNT(Name) AS COUNTBOOK, 
+	SUM(Price) AS SUMPRICE, 
+	AVG(Price) AS AVGPRICE, 
+	MAX(Price) AS MAXPRICE, 
+	MIN(Price) AS MINPRICE, 
+	Producer, 
+	Topic, 
+	Category 
+	FROM `book` 
+	GROUP BY Producer, Topic, Category 
+	ORDER BY Producer, Topic, Category ASC;
+
+20.	Вивести список видавництв, у яких округлена до цілого ціна однієї сторінки більше 10 копійок. 
+SELECT Producer, 
+	Price, 
+	Pages 
+	FROM `book` 
+	WHERE Price/Pages > 0.1 GROUP BY Producer;
+
