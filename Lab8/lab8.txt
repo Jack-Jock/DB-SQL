@@ -1,0 +1,158 @@
+			Скорий Євген 241
+ЛР №8
+Проектування і перевірка тригерів (trigger), що активізуються при додаванні (insert), виправленні (update) і видаленні (delete) даних.
+
+1.	Кількість тем може бути в діапазоні від 5 до 10.
+
+
+DELIMITER //
+CREATE TRIGGER trigg_1I BEFORE INSERT ON topic
+FOR EACH ROW
+	IF
+    	(SELECT COUNT(*) FROM topic) >= 10 THEN
+    	SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Кількість тем не відповідає діапазону від 5 до 10';
+END IF //
+DELIMITER ;
+
+
+DELIMITER //
+CREATE TRIGGER trigg_1D BEFORE DELETE ON topic
+IF
+    	(SELECT COUNT(*) FROM topic) <= 5 THEN
+    	SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Кількість тем не відповідає діапазону від 5 до 10';
+END IF //
+DELIMITER ;
+
+
+2.	Новинкою може бути тільки книга видана в поточному році.
+
+
+DELIMITER //
+CREATE TRIGGER trigg_2 BEFORE INSERT ON book
+FOR EACH ROW
+	IF (NEW.New = 'Yes' && YEAR(NEW.Date) <> YEAR(CURRENT_DATE())) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Новинкою може бути тільки книга видана в поточному році';
+END IF //
+DELIMITER ;
+
+INSERT INTO book(CodeID, New, Name, Price, Pages, FormatID, Date, Circulation, ProducerID, TopicID, CategoryID) 
+VALUES
+(5121, 'Yes', 'Апаратні засоби мультимедіа.Відеосистема PC', 16.51, 300, 1, '2000-07-24', 5000, 1, 1, 1)
+
+
+3.	Книга з кількістю сторінок до 100 не може коштувати більше 10 $, до 200 - 20 $, до 300 - 30 $.
+
+
+DELIMITER //
+CREATE TRIGGER trigg_3 BEFORE INSERT ON book
+FOR EACH ROW
+BEGIN  
+  IF NEW.Pages <= 100 AND NEW.Price > 10 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Ціна книги з кількістю сторінок до 100 повинна бути не більше 10$';
+  ELSEIF NEW.Pages <= 200 AND NEW.Price > 20 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Ціна книги з кількістю сторінок до 200 повинна бути не більше 20$';
+  ELSEIF NEW.Pages <= 300 AND NEW.Price > 30 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Ціна книги з кількістю сторінок до 300 повинна бути не більше 30$';
+  END IF;
+END //
+DELIMITER ;
+
+4.	Видавництво "BHV" не випускає книги накладом меншим 5000, а видавництво Diasoft - 10000.
+
+
+DELIMITER //
+CREATE TRIGGER trigg_4 BEFORE INSERT ON book
+FOR EACH ROW
+BEGIN  
+  IF NEW.ProducerID = 1 AND NEW.Circulation < 5000 THEN
+  SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Видавництво BHV не випускає книги накладом меншим 5000';
+  ELSEIF NEW.ProducerID = 4 AND NEW.Circulation < 10000 THEN
+  SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Видавництво Diasoft не випускає книги накладом меншим 10000';
+  END IF;
+END //
+DELIMITER ;
+
+
+5.	Книги з однаковим кодом повинні мати однакові дані.
+
+
+DELIMITER //
+CREATE TRIGGER trigg_5 BEFORE INSERT ON book
+FOR EACH ROW
+BEGIN
+	DECLARE New_c VARCHAR(255);
+   	DECLARE Name_c VARCHAR(255);
+   	DECLARE Price_c FLOAT;
+   	DECLARE ProducerID_c INT;
+   	DECLARE Pages_c INT;
+   	DECLARE FormatID_c INT;
+   	DECLARE Date_c DATE;
+   	DECLARE Circulation_c INT;
+   	DECLARE TopicID_c INT;
+   	DECLARE CategoryID_c INT;
+    
+    SELECT New, Name, Price, Pages, FormatID, Date, Circulation, ProducerID, TopicID, CategoryID
+    INTO New_c, Name_c, Price_c, Pages_c, FormatID_c, Date_c, Circulation_c, ProducerID_c, TopicID_c, CategoryID_c
+    FROM book
+    WHERE CodeID = NEW.CodeID LIMIT 1;
+  IF (SELECT COUNT(*) FROM book WHERE CodeID = NEW.CodeID) > 0 THEN 
+    IF NEW.New != New_c OR NEW.Name != Name_c OR NEW.Price != Price_c OR 
+      NEW.FormatID != FormatID_c OR NEW.Date != Date_c OR NEW.Circulation != Circulation_c OR 
+      NEW.ProducerID != ProducerID_c OR NEW.TopicID != TopicID_c OR NEW.CategoryID != CategoryID_c 
+      THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Книги мають не однакові дані';
+    END IF;
+  END IF;
+END //
+DELIMITER ;
+
+
+6.	При спробі видалення книги видається інформація про кількість видалених рядків. Якщо користувач не "dbo", то видалення забороняється.
+7.	Користувач "dbo" не має права змінювати ціну книги.
+8.	Видавництва ДМК і Еком підручники не видають.
+
+
+DELIMITER //
+CREATE TRIGGER trigg_8 BEFORE INSERT ON book
+FOR EACH ROW
+BEGIN
+  IF NEW.ProducerID IN (5, 7) AND NEW.CategoryID = 1 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Видавництва ДМК і Еком не можуть видавати підручники';
+  END IF;
+END //
+DELIMITER ;
+
+INSERT INTO book(CodeID, New, Name, Price, Pages, FormatID, Date, Circulation, ProducerID, TopicID, CategoryID) 
+VALUES
+(5341, 'Yes', 'PC', 24.4, 300, 1, '2023-04-14', 5000, 5, 1, 1)
+
+9.	Видавництво не може випустити більше 10 новинок протягом одного місяця поточного року.
+
+
+DELIMITER //
+CREATE TRIGGER trigg_9 BEFORE INSERT ON book
+FOR EACH ROW
+BEGIN
+	DECLARE book_count INT;
+    SET book_count = 0;
+    SELECT COUNT(*) INTO book_count
+    FROM book
+    WHERE book.ProducerID = book.ProducerID AND book.New AND YEAR_(CURRENT_DATE) = YEAR(book.Date) AND MONTH(CURRENT_DATE) = MONTH(book.Date);
+    IF (book.New AND book_count IS NOT NULL AND book_count > 10) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Видавництво не може видати більше 10 новинок за місяць';
+    END IF;
+END //
+DELIMITER ;
+
+
+10.	Видавництво BHV не випускає книги формату 60х88 / 16.
+
+
+DELIMITER //
+CREATE TRIGGER trigg_10 BEFORE INSERT ON book
+FOR EACH ROW
+BEGIN
+ 	IF NEW.ProducerID = 1 AND NEW.FormatID = 3 THEN
+	SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Видавництво "BHV" не може видавати книги з форматом "60х88 / 16"';
+  END IF;
+END //
+DELIMITER ;
