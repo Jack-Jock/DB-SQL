@@ -107,7 +107,34 @@ DELIMITER ;
 
 
 6.	При спробі видалення книги видається інформація про кількість видалених рядків. Якщо користувач не "dbo", то видалення забороняється.
+
+
+DELIMITER //
+CREATE TRIGGER trigg_6 BEFORE DELETE ON book
+FOR EACH ROW
+BEGIN
+	IF (CURRENT_USER <> 'dbo') THEN 
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT= 'Видалення заборонено для даного користувача'; 
+  END IF;
+END //
+DELIMITER ;
+
+
+
 7.	Користувач "dbo" не має права змінювати ціну книги.
+
+
+DELIMITER //
+CREATE TRIGGER trigg_7 BEFORE UPDATE ON book 
+FOR EACH ROW
+BEGIN 
+	IF ((CURRENT_USER = 'dbo') AND OLD.Price <> NEW.Price) THEN 
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Користувач "dbo" не має права змінювати ціну книги';
+ END IF;
+END //
+DELIMITER ;
+
+
 8.	Видавництва ДМК і Еком підручники не видають.
 
 
