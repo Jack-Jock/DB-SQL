@@ -1,0 +1,92 @@
+		Скорий Євген 241
+ЛР №9
+Проектування користувальницьких функцій (user defined function). Робота з SQL курсором (cursor).
+
+1.	Розробити та перевірити скалярну (scalar) функцію, що повертає загальну вартість книг виданих в певному році.
+
+
+CREATE FUNCTION Funct_1(year_date INT) 
+RETURNS FLOAT
+  	RETURN (
+        SELECT SUM(Price) FROM book WHERE YEAR(Date) = year_date);
+
+
+2.	Розробити і перевірити табличну (inline) функцію, яка повертає список книг виданих в певному році.
+
+
+CREATE FUNCTION Funct_2(year_date INT) RETURNS TABLE
+RETURN
+	(SELECT * FROM book
+     WHERE YEAR(Date) = year_date);
+
+
+
+3.	Розробити і перевірити функцію типу multi-statement, яка буде:
+	a.	приймати в якості вхідного параметра рядок, що містить список назв видавництв, розділених символом ‘;’;  
+	b.	виділяти з цього рядка назву видавництва;
+	c.	формувати нумерований список назв видавництв.
+
+
+CREATE FUNCTION Funct_3(Producers VARCHAR(255))
+RETURNS VARCHAR
+RETURN
+(
+    WITH Number AS
+    (
+        SELECT ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS RowNumber, value AS Name
+        FROM SUBSTRING_INDEX(Producers, ';')
+    )
+    SELECT CONCAT(RowNumber, '. ', Name) AS Producer
+    FROM Number
+);
+
+
+4.	Виконати набір операцій по роботі з SQL курсором: оголосити курсор;
+	a.	використовувати змінну для оголошення курсору;
+	b.	відкрити курсор;
+	c.	переприсвоїти курсор іншої змінної;
+	d.	виконати вибірку даних з курсору;
+	e.	закрити курсор;
+
+
+DELIMITER //
+CREATE PROCEDURE Funct_4()
+BEGIN
+	/*оголосити курсор;*/
+	DECLARE Cursorr CURSOR;
+    /*відкрити курсор;*/
+	OPEN Cursorr;
+    /*переприсвоїти курсор іншої змінної;*/
+	DECLARE Cursorr2 CURSOR;
+	SET Cursorr2 = Cursorr;
+    /*виконати вибірку даних з курсору;*/
+	FETCH NEXT FROM Cursorr;
+    /*закрити курсор;*/
+	CLOSE Cursorr;
+    /*звільнити курсор*/
+	DEALLOCATE Cursorr;
+END //
+DELIMITER ;
+
+
+
+5.	Розробити курсор для виводу списка книг виданих у визначеному році.
+
+
+DELIMITER //
+CREATE PROCEDURE Proc_5_5(IN Year_date INT, OUT bookName VARCHAR(255))
+BEGIN
+	DECLARE Cursorr CURSOR FOR
+	SELECT Name FROM book
+	WHERE YEAR(Date) = Year_date;
+	OPEN  Cursorr;
+	FETCH NEXT FROM Cursorr INTO bookName;
+    WHILE Cursorr <> 0
+	BEGIN
+    PRINT bookName;
+    FETCH NEXT FROM Cursorr INTO bookName;
+END;
+CLOSE BookCursor;
+DEALLOCATE BookCursor;
+END //
+DELIMITER ;
